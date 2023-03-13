@@ -1,0 +1,506 @@
+#include <iostream>
+#include <stdio.h>
+#include <conio.h>
+#include <fstream>
+#include <cstdlib>
+#include <vector>
+
+using namespace std;
+
+struct Contact
+{
+    int contactIDNumber = 0;
+    string contactFirstName = "", contactSurname = "", contactPhoneNumber = "", contactEmailAdress = "", contactAddress = "";
+};
+
+void displayAllDataFromVector(vector <Contact>& contactsStorageTable)
+{
+    cout << "Lista Kontaktow:" << endl;
+
+    if (contactsStorageTable.size() == 0) cout << "Brak danych..." << endl;
+
+    for (int displayDataVectorIterator = 0; displayDataVectorIterator < (int) contactsStorageTable.size(); displayDataVectorIterator++)
+    {
+        cout << contactsStorageTable[displayDataVectorIterator].contactIDNumber << "|" << contactsStorageTable[displayDataVectorIterator].contactFirstName << "|";
+        cout << contactsStorageTable[displayDataVectorIterator].contactSurname << "|" << contactsStorageTable[displayDataVectorIterator].contactPhoneNumber << "|";
+        cout << contactsStorageTable[displayDataVectorIterator].contactEmailAdress << "|" << contactsStorageTable[displayDataVectorIterator].contactAddress << "|" << endl;
+    }
+    system("pause");
+}
+
+string readContactDataLine()
+{
+    string contactDataLine = "";
+    cin.sync();
+    getline(cin, contactDataLine);
+    return contactDataLine;
+}
+
+void loadFileData(vector <Contact> & contactsStorageTable)
+{
+    Contact dataFromFile;
+    fstream contactsStorageFile;
+    string lineFromFile;
+    string fileLineFragment = "";
+    string fileSingleCharacter = "";
+    int dataSeparatorNumber = 0;
+    int fileLineNumber = 0;
+    int fileCharacterNumber = 0;
+
+    contactsStorageFile.open("ksiazka_adresowa_v2.txt",ios::in | ios::app);
+    if(contactsStorageFile.good() == false)
+    {
+        cout << "Nie udalo sie otworzyc pliku!";
+        system("pause");
+    }
+
+    while(getline(contactsStorageFile,lineFromFile))
+    {
+        int characterNumberToSeparate = lineFromFile.length();
+        while(characterNumberToSeparate > 0)
+        {
+            fileSingleCharacter = lineFromFile[fileCharacterNumber];
+            if(fileSingleCharacter != "|")
+            {
+                fileLineFragment += fileSingleCharacter;
+                characterNumberToSeparate--;
+                fileCharacterNumber++;
+                continue;
+            }
+
+            else if(fileSingleCharacter == "|")
+            {
+                dataSeparatorNumber++;
+                characterNumberToSeparate--;
+                fileCharacterNumber++;
+            }
+
+            switch(dataSeparatorNumber)
+            {
+            case 1:
+                dataFromFile.contactIDNumber = atoi(fileLineFragment.c_str());
+                fileLineFragment = "";
+                break;
+
+            case 2:
+                dataFromFile.contactFirstName = fileLineFragment;
+                fileLineFragment = "";
+                break;
+
+            case 3:
+                dataFromFile.contactSurname = fileLineFragment;
+                fileLineFragment = "";
+                break;
+
+            case 4:
+                dataFromFile.contactPhoneNumber = fileLineFragment;
+                fileLineFragment = "";
+                break;
+
+            case 5:
+                dataFromFile.contactEmailAdress = fileLineFragment;
+                fileLineFragment = "";
+                break;
+
+            case 6:
+                dataFromFile.contactAddress = fileLineFragment;
+                fileLineFragment = "";
+                fileLineNumber++;
+                dataSeparatorNumber = 0;
+                fileCharacterNumber = 0;
+                contactsStorageTable.push_back(dataFromFile);
+                break;
+            }
+        }
+    }
+    contactsStorageFile.close();
+}
+
+void uploadFileData(vector <Contact> & contactsStorageTable, Contact & newFileData)
+{
+    fstream contactsStorageFile;
+    contactsStorageFile.open("ksiazka_adresowa_v2.txt",ios::out | ios::app);
+
+    contactsStorageFile << newFileData.contactIDNumber << "|" << newFileData.contactFirstName << "|";
+    contactsStorageFile << newFileData.contactSurname << "|" << newFileData.contactPhoneNumber << "|";
+    contactsStorageFile << newFileData.contactEmailAdress << "|" << newFileData.contactAddress << "|" << endl;
+
+    contactsStorageFile.close();
+}
+
+void getNewContact(vector <Contact> & contactsStorageTable)
+{
+    Contact newFileData;
+    int contactsNumberOnList = contactsStorageTable.size();
+    int lastIndexOnList = 0;
+    int lastContactID = 0;
+
+    cout << "Wprowadz nowe dane: " << endl;
+    cout << "Imie: ";
+    newFileData.contactFirstName = readContactDataLine();
+
+    cout << "Nazwisko: ";
+    newFileData.contactSurname = readContactDataLine();
+
+    cout << "Numer telefonu: ";
+    newFileData.contactPhoneNumber = readContactDataLine();
+
+    cout << "Email: ";
+    newFileData.contactEmailAdress = readContactDataLine();
+
+    cout << "Adres: ";
+    newFileData.contactAddress = readContactDataLine();
+
+    if(contactsNumberOnList == 0)
+    {
+        newFileData.contactIDNumber = 1;
+    }
+    else
+    {
+        lastIndexOnList = contactsNumberOnList - 1;
+        lastContactID = contactsStorageTable[lastIndexOnList].contactIDNumber;
+        newFileData.contactIDNumber = lastContactID + 1;
+    }
+    contactsStorageTable.push_back(newFileData);
+    uploadFileData(contactsStorageTable,newFileData);
+}
+
+void displayFileData()
+{
+    fstream contactsStorageFile;
+    contactsStorageFile.open("ksiazka_adresowa_v2.txt",ios::in);
+    string fileTextLine;
+
+    if(contactsStorageFile.good()==true)
+    {
+        while(getline(contactsStorageFile,fileTextLine))
+        {
+            cout << fileTextLine << endl;
+        }
+        system("pause");
+    }
+    else
+    {
+        cout << "Plik z danymi nie istnieje, wprowadz na liste informacje" << endl;
+        system("pause");
+    }
+    contactsStorageFile.close();
+}
+
+void displayContactDataToDelete(vector <Contact>& contactsStorageTable, int specifiedContactId)
+{
+    cout << "Imie: " << contactsStorageTable[specifiedContactId].contactFirstName << endl;
+    cout << "Nazwisko: " << contactsStorageTable[specifiedContactId].contactSurname << endl;
+    cout << "Nr Telefonu: " << contactsStorageTable[specifiedContactId].contactPhoneNumber << endl;
+    cout << "Email: " << contactsStorageTable[specifiedContactId].contactEmailAdress << endl;
+    cout << "Adres: " << contactsStorageTable[specifiedContactId].contactAddress << endl;
+}
+
+void searchContactsByName(vector <Contact> & contactsStorageTable)
+{
+    string contactSearchedName;
+    cout << "Wprowadz imie adresata, ktorego danych poszukujesz: ";
+    cin.sync();
+    getline(cin,contactSearchedName);
+
+    if(contactsStorageTable.size() == 0)
+    {
+        cout << "Brak danych kontaktowych w ksiazce..." << endl;
+        system("pause");
+        return;
+    }
+
+    for(int nameSearchIterator = 0; nameSearchIterator <= (int) contactsStorageTable.size(); nameSearchIterator++)
+    {
+        if(contactSearchedName == contactsStorageTable[nameSearchIterator].contactFirstName)
+        {
+            cout << "Znaleziono dane osoby o imieniu " << contactSearchedName << ":" << endl;
+            cout << "Numer ID: " << contactsStorageTable[nameSearchIterator].contactIDNumber << endl;
+            cout << "Imie: " << contactsStorageTable[nameSearchIterator].contactFirstName << endl;
+            cout << "Nazwisko: " << contactsStorageTable[nameSearchIterator].contactSurname << endl;
+            cout << "Numer telefonu: " << contactsStorageTable[nameSearchIterator].contactPhoneNumber << endl;
+            cout << "Email: " << contactsStorageTable[nameSearchIterator].contactEmailAdress << endl;
+            cout << "Adres: " << contactsStorageTable[nameSearchIterator].contactAddress << endl;
+            cout << endl;
+        }
+        if((nameSearchIterator == (int) contactsStorageTable.size()) && (contactSearchedName != contactsStorageTable[nameSearchIterator-1].contactFirstName))
+            cout << "Nie znaleziono osoby o takim imieniu" << endl;
+    }
+    system("pause");
+}
+
+void searchContatcsBySurname(vector <Contact> & contactsStorageTable)
+{
+    string contactSearchedSurname;
+    cout << "Wprowadz nazwisko adresata, ktorego danych poszukujesz: ";
+    cin.sync();
+    getline(cin,contactSearchedSurname);
+
+    if(contactsStorageTable.size() == 0)
+    {
+        cout << "Brak danych kontaktowych w ksiazce..." << endl;
+        system("pause");
+        return;
+    }
+
+    for(int surnameSearchIterator = 0; surnameSearchIterator <= (int) contactsStorageTable.size(); surnameSearchIterator++)
+    {
+        if(contactSearchedSurname == contactsStorageTable[surnameSearchIterator].contactSurname)
+        {
+            cout << "Znaleziono dane osoby o nazwisku " << contactSearchedSurname << ":" << endl;
+            cout << "Numer ID: " << contactsStorageTable[surnameSearchIterator].contactIDNumber << endl;
+            cout << "Imie: " << contactsStorageTable[surnameSearchIterator].contactFirstName << endl;
+            cout << "Nazwisko: " << contactsStorageTable[surnameSearchIterator].contactSurname << endl;
+            cout << "Numer telefonu: " << contactsStorageTable[surnameSearchIterator].contactPhoneNumber << endl;
+            cout << "Email: " << contactsStorageTable[surnameSearchIterator].contactEmailAdress << endl;
+            cout << "Adres: " << contactsStorageTable[surnameSearchIterator].contactAddress << endl;
+            cout << endl;
+        }
+        if((surnameSearchIterator == (int) contactsStorageTable.size()) && (contactSearchedSurname != contactsStorageTable[surnameSearchIterator-1].contactSurname)) cout << "Nie znaleziono osoby o takim nazwisku" << endl;
+
+    }
+    system("pause");
+}
+
+void saveFileChanges(vector <Contact> & contactsStorageTable)
+{
+    fstream contactsStorageFile;
+
+    remove("ksiazka_adresowa_v2.txt");
+    contactsStorageFile.open("ksiazka_adresowa_v2.txt",ios::out | ios::app);
+
+    for(int fileSavingIterator = 0; fileSavingIterator < (int) contactsStorageTable.size(); fileSavingIterator++)
+    {
+        contactsStorageFile << contactsStorageTable[fileSavingIterator].contactIDNumber << "|" << contactsStorageTable[fileSavingIterator].contactFirstName << "|";
+        contactsStorageFile << contactsStorageTable[fileSavingIterator].contactSurname << "|" << contactsStorageTable[fileSavingIterator].contactPhoneNumber << "|";
+        contactsStorageFile << contactsStorageTable[fileSavingIterator].contactEmailAdress << "|" << contactsStorageTable[fileSavingIterator].contactAddress << "|" << endl;
+    }
+    contactsStorageFile.close();
+}
+
+void editContactData(vector <Contact> & contactsStorageTable)
+{
+    Contact contactDataToEdit;
+    char editionOptionNumber;
+    int editedContactId;
+    int contactsIDIndex = 0;
+    int editSearchLogicValue = 0;
+    string editedContactData;
+
+    system("cls");
+    cout << "Edycja danych" << endl;
+    cout << "________________________" << endl;
+    cout << "Wybierz, ktore dane chcesz edytowac" << endl;
+    cout << "1. Imie" << endl;
+    cout << "2. Nazwisko" << endl;
+    cout << "3. Numer telefonu" << endl;
+    cout << "4. Email" << endl;
+    cout << "5. Adres" << endl;
+    cout << "6. Powrot do menu glownego" << endl;
+    cin.sync();
+    editionOptionNumber = getch();
+
+    system("cls");
+    if(editionOptionNumber == '1' || editionOptionNumber == '2' || editionOptionNumber == '3' || editionOptionNumber == '4' || editionOptionNumber == '5')
+    {
+        displayAllDataFromVector(contactsStorageTable);
+        cout << "Wprowadz numer ID adresata, ktorego dane chcesz zmienic: ";
+        cin.sync();
+        cin >> editedContactId;
+
+        for(int contactEditionIterator = 0; contactEditionIterator < (int) contactsStorageTable.size(); contactEditionIterator++)
+        {
+            if(contactsStorageTable[contactEditionIterator].contactIDNumber == editedContactId)
+            {
+                contactsIDIndex = contactEditionIterator;
+                editSearchLogicValue =+ 1;
+            }
+        }
+        if(editSearchLogicValue == 0)
+        {
+            cout << "Na liscie nie ma danych pod wskazanym numerem indeksu" << endl;
+            system("pause");
+            return;
+        }
+    }
+    else
+        return;
+
+    contactDataToEdit = contactsStorageTable[contactsIDIndex];
+    switch(editionOptionNumber)
+    {
+    case '1':
+    {
+        cout << "Wprowadz aktualne imie: ";
+        editedContactData = readContactDataLine();
+        contactDataToEdit.contactFirstName = editedContactData;
+        contactsStorageTable[contactsIDIndex].contactFirstName = editedContactData;
+        saveFileChanges(contactsStorageTable);
+        cout << "Dane zostaly zmienione: " << endl;
+        system("pause");
+        break;
+    }
+    case '2':
+    {
+        cout << "Wprowadz aktualne nazwisko: ";
+        editedContactData = readContactDataLine();
+        contactDataToEdit.contactSurname = editedContactData;
+        contactsStorageTable[contactsIDIndex].contactSurname = editedContactData;
+        saveFileChanges(contactsStorageTable);
+        cout << "Dane zostaly zmienione" << endl;
+        system("pause");
+        break;
+    }
+    case '3':
+    {
+        cout << "Wprowadz aktualny numer telefonu: ";
+        editedContactData = readContactDataLine();
+        contactDataToEdit.contactPhoneNumber = editedContactData;
+        contactsStorageTable[contactsIDIndex].contactPhoneNumber = editedContactData;
+        saveFileChanges(contactsStorageTable);
+        cout << "Dane zostaly zmienione" << endl;
+        system("pause");
+        break;
+    }
+    case '4':
+    {
+        cout << "Wprowadz aktualny email: ";
+        editedContactData = readContactDataLine();
+        contactDataToEdit.contactEmailAdress = editedContactData;
+        contactsStorageTable[contactsIDIndex].contactEmailAdress = editedContactData;
+        saveFileChanges(contactsStorageTable);
+        cout << "Dane zostaly zmienione" << endl;
+        system("pause");
+        break;
+    }
+    case '5':
+    {
+        cout << "Wprowadz aktualny adres: ";
+        editedContactData = readContactDataLine();
+        contactDataToEdit.contactAddress = editedContactData;
+        contactsStorageTable[contactsIDIndex].contactAddress = editedContactData;
+        saveFileChanges(contactsStorageTable);
+        cout << "Dane zostaly zmienione" << endl;
+        system("pause");
+        break;
+    }
+    case '6':
+    {
+        break;
+    }
+    }
+}
+
+void deleteSpecifiedFileData(vector <Contact> & contactsStorageTable, int specifiedContactId)
+{
+    fstream contactsStorageFile;
+    remove("ksiazka_adresowa_v2.txt");
+    contactsStorageFile.open("ksiazka_adresowa_v2.txt",ios::out | ios::app);
+    contactsStorageTable.erase(contactsStorageTable.begin() + specifiedContactId);
+    for(int specifiedDeletionIterator = 0; specifiedDeletionIterator < (int) contactsStorageTable.size(); specifiedDeletionIterator++)
+    {
+        contactsStorageFile << contactsStorageTable[specifiedDeletionIterator].contactIDNumber << "|" << contactsStorageTable[specifiedDeletionIterator].contactFirstName << "|";
+        contactsStorageFile << contactsStorageTable[specifiedDeletionIterator].contactSurname << "|" << contactsStorageTable[specifiedDeletionIterator].contactPhoneNumber << "|";
+        contactsStorageFile << contactsStorageTable[specifiedDeletionIterator].contactEmailAdress << "|" << contactsStorageTable[specifiedDeletionIterator].contactAddress << "|" << endl;
+    }
+    contactsStorageFile.close();
+}
+
+void displayDeletionMenu(vector <Contact> & contactsStorageTable)
+{
+    int contactIdToDelete;
+    int deleteLogicValue = 0;
+    int specifiedContactId = 0;
+    char deletionMenuChoice;
+    cout << "USUWANE DANYCH" << endl;
+    cout << "________________________" << endl;
+    displayAllDataFromVector(contactsStorageTable);
+    cout << "Wprowadz numer ID adresata, ktorego dane chcesz usunac: ";
+    cin >> contactIdToDelete;
+
+    for(int deletionMenuIterator = 0; deletionMenuIterator < (int) contactsStorageTable.size(); deletionMenuIterator++)
+    {
+        if(contactsStorageTable[deletionMenuIterator].contactIDNumber == contactIdToDelete)
+        {
+            system("cls");
+            cout << "USUWANE DANYCH" << endl;
+            cout << "________________________" << endl;
+            specifiedContactId = deletionMenuIterator;
+            cout << endl << "Dane wskazanego adresata: ";
+            displayContactDataToDelete(contactsStorageTable, specifiedContactId);
+            deleteLogicValue =+ 1;
+            break;
+        }
+    }
+    if(deleteLogicValue == 0)
+    {
+        cout << "Na liscie pod wskazanym numerem nie ma danych" << endl;
+        system("pause");
+        return;
+    }
+
+    cout << "Czy usunac dane adresata o numerze " << contactIdToDelete << "? (T/N)" << endl;
+
+    deletionMenuChoice = getch();
+    if((deletionMenuChoice == 'T') || (deletionMenuChoice == 't'))
+    {
+        deleteSpecifiedFileData(contactsStorageTable, specifiedContactId);
+        cout << "Dane zostaly usuniete" << endl;
+        system("pause");
+    }
+}
+
+int main()
+{
+    vector <Contact> contactsStorageTable;
+    loadFileData(contactsStorageTable);
+
+    char menuOptionChoice, exitOptionChoice;
+    while(1)
+    {
+        system("cls");
+        cout << "KSIAZKA ADRESOWA" << endl;
+        cout << "1. Dodaj adresata" << endl;
+        cout << "2. Wyszukaj po imieniu" << endl;
+        cout << "3. Wyszukaj po nazwisku" << endl;
+        cout << "4. Wyswietl wszystkich adresatow" << endl;
+        cout << "5. Edytuj adresata" << endl;
+        cout << "6. Usun adresata" << endl;
+        cout << "9. Wyjdz z programu" << endl;
+        menuOptionChoice = getch();
+        system("cls");
+        switch(menuOptionChoice)
+        {
+        case '1':
+            getNewContact(contactsStorageTable);
+            break;
+
+        case '2':
+            searchContactsByName(contactsStorageTable);
+            break;
+
+        case '3':
+            searchContatcsBySurname(contactsStorageTable);
+            break;
+
+        case '4':
+            displayAllDataFromVector(contactsStorageTable);
+            break;
+
+        case '5':
+            editContactData(contactsStorageTable);
+            break;
+
+        case '6':
+            displayDeletionMenu(contactsStorageTable);
+            break;
+
+        case '9':
+            system("cls");
+            cout << "Czy chcesz wyjsc z programu? (T/N)" << endl;
+            exitOptionChoice = getch();
+            if((exitOptionChoice == 'T') || (exitOptionChoice == 't')) exit(0);
+        }
+    }
+    return 0;
+}
